@@ -78,11 +78,13 @@ You will need to run as root to be able create the appropriate network sockets, 
 
 ##Credits:
 
-  This project was inspired by benjoj's blog: https://blog.benjojo.co.uk/post/cheap-hdmi-capture-for-linux which was in turn inspired by danman's blog: https://blog.danman.eu/reverse-engineering-lenkeng-hdmi-over-ip-extender/
+  This project was inspired by benjojo's blog: https://blog.benjojo.co.uk/post/cheap-hdmi-capture-for-linux which was in turn inspired by danman's blog: https://blog.danman.eu/reverse-engineering-lenkeng-hdmi-over-ip-extender/
 
   Original script by Silver Moon (m00n.silv3r@gmail.com) and danman.
 
   Framerates by Jared Earl. :)
+
+##Notes
 
   Note that video frames are buffered and discarded if any part of the frame is lost or received out of sequence. This is safe to do as the data is in MJPEG format so every frame is a complete image, and loss of one frame every now and then will not be noticeable. The same cannot be said for audio, and currently no attempt is made to sanitise the audio.
 
