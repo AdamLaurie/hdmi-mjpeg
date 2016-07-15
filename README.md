@@ -68,7 +68,7 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   You may get a better soundtrack by switching your source to Stereo/PCM instead of allowing the transmitter to downscale.
 
-Further development you could help with:
+##Further development you could help with:
 
   - Add gstreamer pipelines for monitoring/streaming.
 
