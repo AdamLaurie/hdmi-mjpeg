@@ -90,5 +90,5 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   Despite the cheapness of the device, the video output is very high quality. This is because it is effectively dumping a frame buffer direct from HDMI and is using the full YUV range so there is very little noticeble degredation in quality. The audio, on the other hand, is always transcoded to raw PCM Stereo, so you will lose any surround sound etc.
 
-  The audio track is currently not tagged with it's data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack goes out of sync during playback then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates).
+  The audio track is currently not tagged with its data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack goes out of sync during playback then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates).
 
