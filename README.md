@@ -15,8 +15,15 @@ Despite the cheapness of the device, the video output is very high quality. This
 
 ```
 
-  hdmi-mjpeg.py <file prefix> [minutes]
+  hdmi-mjpeg.py [options] <file prefix> [minutes]
 
+  Options:
+    -h, --help            show this help message and exit
+    -p SENDER_PORT, --sender_port=SENDER_PORT
+                          set sender's UDP PORT (48689)
+    -q, --quiet           don't print status messages to stdout (False)
+    -s SENDER_IP, --sender_ip=SENDER_IP
+                          set sender's IP address (192.168.168.55)
 
 ```
 
@@ -96,18 +103,3 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   HDCP is stripped by the hardware.
 
-  Full usage:
-
-```
-
-  Usage: hdmi-mjpeg.py [options] <file prefix> [minutes]
-
-  Options:
-    -h, --help            show this help message and exit
-    -p SENDER_PORT, --sender_port=SENDER_PORT
-                          set sender's UDP PORT (48689)
-    -q, --quiet           don't print status messages to stdout (False)
-    -s SENDER_IP, --sender_ip=SENDER_IP
-                          set sender's IP address (192.168.168.55)
-
-```
