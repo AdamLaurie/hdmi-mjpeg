@@ -24,12 +24,12 @@ import binascii
 import time, datetime
 from optparse import OptionParser
 
-SHOST="0.0.0.0"
 MESSAGE = "5446367A600200000000000303010026000000000234C2".decode('hex')
 
 
 usage= "usage: %prog [options] <file prefix> [minutes]"
 parser= OptionParser(usage= usage)
+parser.add_option("-l", "--local_ip", dest="local_ip", default= "0.0.0.0", help="use local IP address as source (0.0.0.0)")
 parser.add_option("-p", "--sender_port", type="int", dest="sender_port", default= 48689, help="set sender's UDP PORT (48689)")
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default= True, help="don't print status messages to stdout (False)")
 parser.add_option("-s", "--sender_ip", dest="sender_ip", default= "192.168.168.55", help="set sender's IP address (192.168.168.55)")
@@ -76,7 +76,7 @@ end_time= None
 
 
 Keepalive_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP socket for keepalives
-Keepalive_sock.bind((SHOST, options.sender_port)) # send from the correct port or it will be ignored
+Keepalive_sock.bind((options.local_ip, options.sender_port)) # send from the correct port or it will be ignored
 
 # detect quit
 signal.signal(signal.SIGINT, signal_handler)
