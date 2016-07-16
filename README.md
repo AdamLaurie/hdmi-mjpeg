@@ -1,13 +1,15 @@
 # hdmi-mjpeg
 Video/Audio extractor for HDMI network extender.
 
-This code will take the output of a LENKENG HDMI over IP extender (Version 2.0) and save it to raw audio (signed 32 bit big-endian PCM) and MJPEG video.
+This code will take the output of a LENKENG HDMI over IP extender (Version 2.0) and save it to raw audio (signed 32 bit big-endian PCM) and MJPEG video (YUV 4:2:2).
 
 The hardware can be bought cheaply on ebay by searching for 'HDMI Extender 120m', and the device should look like this:
 
 ![LAN extender](extender.jpg)
 
 Make sure it says "LAN/TX" on the CAT5 socket, not just TX as there are some models that do not use IP, but only a straight cable connection. Also, make sure it is the V2.0 model, not V3.
+
+Despite the cheapness of the device, the video output is very high quality. This is because it is effectively dumping a frame buffer direct from HDMI and is using the YUV 4:2:2 Chroma scheme so there is very little noticeble degredation. The audio, on the other hand, is always transcoded to raw PCM Stereo, so you will lose any surround sound etc.
 
 ##Usage:
 
@@ -68,6 +70,8 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   You may get a better soundtrack by switching your source to Stereo/PCM instead of allowing the transmitter to downscale.
 
+  Adding a dual output HDMI splitter will allow you to monitor the source while setting up for recording. It also prevents auto-switching of HDMI settings sometimes caused by switching cables.
+
 ##Further development you could help with:
 
   - Add gstreamer pipelines for monitoring/streaming.
@@ -88,7 +92,22 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   Video frames are buffered and discarded if any part of the frame is lost or received out of sequence. This is safe to do as the data is in MJPEG format so every frame is a complete image, and loss of one frame every now and then will not be noticeable. The same cannot be said for audio, and currently no attempt is made to sanitise the audio.
 
-  Despite the cheapness of the device, the video output is very high quality. This is because it is effectively dumping a frame buffer direct from HDMI and is using the full YUV range so there is very little noticeble degredation in quality. The audio, on the other hand, is always transcoded to raw PCM Stereo, so you will lose any surround sound etc.
-
   The audio track is currently not tagged with its data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack goes out of sync during playback then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates).
 
+  HDCP is stripped by the hardware.
+
+  Full usage:
+
+```
+
+  Usage: hdmi-mjpeg.py [options] <file prefix> [minutes]
+
+  Options:
+    -h, --help            show this help message and exit
+    -p SENDER_PORT, --sender_port=SENDER_PORT
+                          set sender's UDP PORT (48689)
+    -q, --quiet           don't print status messages to stdout (False)
+    -s SENDER_IP, --sender_ip=SENDER_IP
+                          set sender's IP address (192.168.168.55)
+
+```

@@ -22,49 +22,61 @@ from struct import *
 import struct
 import binascii
 import time, datetime
+from optparse import OptionParser
 
-UDP_IP = "192.168.168.55"
-UDP_PORT = 48689
 SHOST="0.0.0.0"
 MESSAGE = "5446367A600200000000000303010026000000000234C2".decode('hex')
 
-if not (len(sys.argv) == 2 or len(sys.argv) == 3):
-	print 'usage: %s <file prefix> [minutes]' % sys.argv[0]
+
+usage= "usage: %prog [options] <file prefix> [minutes]"
+parser= OptionParser(usage= usage)
+parser.add_option("-p", "--sender_port", type="int", dest="sender_port", default= 48689, help="set sender's UDP PORT (48689)")
+parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default= True, help="don't print status messages to stdout (False)")
+parser.add_option("-s", "--sender_ip", dest="sender_ip", default= "192.168.168.55", help="set sender's IP address (192.168.168.55)")
+(options, args) = parser.parse_args()
+
+if not (len(args) == 1 or len(args) == 2):
+	parser.print_help()
 	exit(0)
 
-print "UDP target IP:", UDP_IP
-print "UDP keepalive port:", UDP_PORT
+def log(message):
+	if not options.verbose:
+		return
+	print message
+
+def signal_handler(signal, frame):
+	log('\nFlushing buffers...')
+	Audio.flush()
+	os.fsync(Audio.fileno())
+	Audio.close()
+	log('Audio: %d bytes' % Audio_Bytes)
+	Video.flush()
+	os.fsync(Video.fileno())
+	Video.close()
+	log('Video: %d bytes' % Video_Bytes)
+	sys.exit(0)
+
+def keepalive():
+	Keepalive_sock.sendto(MESSAGE, (options.sender_ip, options.sender_port))
+
+#Convert a string of 6 characters of ethernet address into a dash separated hex string
+def eth_addr (a) :
+  b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
+  return b
+
+log("UDP target IP: %s" % options.sender_ip)
+log("UDP keepalive port: %d" % options.sender_port)
 
 try:
-	record_time= int(sys.argv[2])
-	print 'Recording will cease after %d minutes' % record_time
+	record_time= int(args[1])
+	log('Recording will cease after %d minutes' % record_time)
 except:
 	record_time= None
 end_time= None
 
 
 Keepalive_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP socket for keepalives
-Keepalive_sock.bind((SHOST, UDP_PORT)) # send from the correct port or it will be ignored
-
-def signal_handler(signal, frame):
-	print('\nFlushing buffers...')
-	Audio.flush()
-	os.fsync(Audio.fileno())
-	Audio.close()
-	print 'Audio: %d bytes' % Audio_Bytes
-	Video.flush()
-	os.fsync(Video.fileno())
-	Video.close()
-	print 'Video: %d bytes' % Video_Bytes
-	sys.exit(0)
-
-def keepalive():
-	Keepalive_sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
-
-#Convert a string of 6 characters of ethernet address into a dash separated hex string
-def eth_addr (a) :
-  b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
-  return b
+Keepalive_sock.bind((SHOST, options.sender_port)) # send from the correct port or it will be ignored
 
 # detect quit
 signal.signal(signal.SIGINT, signal_handler)
@@ -82,10 +94,10 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 sender="000b78006001".decode("hex")
 Videostarted=0
-Audio= open(sys.argv[1] + "-audio.dat","w")
-print 'Audio:', sys.argv[1] + "-audio.dat"
-Video= open(sys.argv[1] + "-video.dat","w")
-print 'Video:', sys.argv[1] + "-video.dat"
+Audio= open(args[0] + "-audio.dat","w")
+log('Audio: %s-audio.dat' % args[0])
+Video= open(args[0] + "-video.dat","w")
+log('Video: %s-video.dat' % args[0])
 Video_Bytes= 0
 Audio_Bytes= 0
 
@@ -103,7 +115,7 @@ while True:
     packet = s.recvfrom(65565)
 
     if not packet_started:
-	print 'Listener active at', datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+	log('Listener active at %s' % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
 	packet_started= True
 
     #packet string from tuple
@@ -161,7 +173,7 @@ while True:
 
 		if (dest_port==2068):
 			if not senderstarted:
-				print 'Sender active at', datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+				log('Sender active at %s' % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
 				senderstarted= True
 			frame_n=ord(data[0])*256+ord(data[1])
 			# data[2] is not part of the frame number - if it is set to 0x80 that means this is the last frame
@@ -170,26 +182,26 @@ while True:
 			if (part == 0):
 				if not Videostarted:
 					start_time= time.time()
-					print "Video stream started at frame", frame_n, datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
-					print 'CTL-C to exit'
+					log("Video stream started at frame %s %s" % (frame_n, datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')))
+					log('CTL-C to exit')
 					Videostarted= 1
 					if record_time:
 						end_time= record_time * 60 + start_time
-						print 'Recording will stop automatically at:', datetime.datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
+						log('Recording will stop automatically at: %s' % datetime.datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S'))
 				frame_prev= frame_n
 				Video.write(outbuf)
 				outbuf= ''
 				dropping= False
 				if end_time and time.time() >= end_time:
-					print "Time's up!"
+					log("Time's up!")
 					os.kill(os.getpid(), signal.SIGINT)
 			elif Videostarted:
 				if not frame_prev == frame_n:
-					print 'dropped frame', frame_n
+					log('dropped frame % d' % frame_n)
 					frame_prev= frame_n
 					dropping= True
 				if not part_prev + 1 == part:
-					print 'dropped part %d of frame %d' % (part, frame_n)
+					log('dropped part %d of frame %d' % (part, frame_n))
 					dropping= True
 			if Videostarted and not dropping:
 				outbuf += data[4:]
