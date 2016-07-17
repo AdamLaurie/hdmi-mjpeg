@@ -19,6 +19,8 @@ Despite the cheapness of the device, the video output is very high quality. This
 
   Options:
     -h, --help            show this help message and exit
+    -l LOCAL_IP, --local_ip=LOCAL_IP
+                          use local IP address as source (0.0.0.0)
     -p SENDER_PORT, --sender_port=SENDER_PORT
                           set sender's UDP PORT (48689)
     -q, --quiet           don't print status messages to stdout (False)
