@@ -25,6 +25,7 @@ import time, datetime
 from optparse import OptionParser
 
 MESSAGE = "5446367A600200000000000303010026000000000234C2".decode('hex')
+AUDIO_HEADER= "00555555555555555555555500000000".decode('hex')
 exitvalue= os.EX_OK
 
 
@@ -51,11 +52,11 @@ def signal_handler(signal, frame):
 	Audio.flush()
 	os.fsync(Audio.fileno())
 	Audio.close()
-	log('Audio: %d bytes' % Audio_Bytes)
+	log('Audio: %d frames, %d bytes (%d frames dropped)' % (Audio_Frames, Audio_Bytes, Audio_Dropped))
 	Video.flush()
 	os.fsync(Video.fileno())
 	Video.close()
-	log('Video: %d bytes (%d frames dropped)' % (Video_Bytes, Video_Dropped))
+	log('Video: %d frames, %d bytes (%d frames dropped)' % (Video_Frames, Video_Bytes, Video_Dropped))
 	sys.exit(exitvalue)
 
 def keepalive():
@@ -102,9 +103,12 @@ Audio= open(args[0] + "-audio.dat","w")
 log('Audio: %s-audio.dat' % args[0])
 Video= open(args[0] + "-video.dat","w")
 log('Video: %s-video.dat' % args[0])
+Video_Frames= 0
 Video_Bytes= 0
 Video_Dropped= 0
+Audio_Frames= 0
 Audio_Bytes= 0
+Audio_Dropped= 0
 
 # keep track of dropped frames
 frame_prev= None
@@ -173,8 +177,17 @@ while True:
 
 		# audio
 		if (dest_port==2066) and Videostarted:
-			Audio.write(data[16:])
-			Audio_Bytes += len(data[16:])
+			if data[:16] == AUDIO_HEADER:
+				Audio.write(data[16:])
+				Audio_Bytes += len(data[16:])
+				Audio_Frames += 1
+			else:
+				log('Audio frame dropped')
+				Audio_Dropped += 1
+				if options.strict:
+					log('Aborting due to audio frame drop!')
+					exitvalue= os.EX_DATAERR
+					os.kill(os.getpid(), signal.SIGINT)
 
 		if (dest_port==2068):
 			if not senderstarted:
@@ -196,11 +209,12 @@ while True:
 				frame_prev= frame_n
 				Video.write(outbuf)
 				Video_Bytes += len(outbuf)
+				Video_Frames += 1
 				outbuf= ''
 				if dropping:
 					Video_Dropped += 1
 					if options.strict:
-						log('Aborting due to frame drop!')
+						log('Aborting due to video frame drop!')
 						exitvalue= os.EX_DATAERR
 						os.kill(os.getpid(), signal.SIGINT)
 				dropping= False
@@ -209,12 +223,12 @@ while True:
 					os.kill(os.getpid(), signal.SIGINT)
 			elif Videostarted:
 				if not frame_prev == frame_n:
-					log('dropped frame % d' % frame_n)
+					log('Video dropped frame % d' % frame_n)
 					frame_prev= frame_n
 					outbuf= ''
 					dropping= True
 				if not part_prev + 1 == part:
-					log('dropped part %d of frame %d' % (part, frame_n))
+					log('Video dropped part %d of frame %d' % (part, frame_n))
 					outbuf= ''
 					dropping= True
 			if Videostarted and not dropping:
