@@ -26,6 +26,7 @@ Despite the cheapness of the device, the video output is very high quality. This
     -q, --quiet           don't print status messages to stdout (False)
     -s SENDER_IP, --sender_ip=SENDER_IP
                           set sender's IP address (192.168.168.55)
+    -S, --strict          strict mode - abort recording if frames dropped
 
 ```
 
