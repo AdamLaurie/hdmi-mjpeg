@@ -199,9 +199,13 @@ while True:
 				if not frame_prev == frame_n:
 					log('dropped frame % d' % frame_n)
 					frame_prev= frame_n
+					Video_Bytes -= len(outbuf)
+					outbuf= ''
 					dropping= True
 				if not part_prev + 1 == part:
 					log('dropped part %d of frame %d' % (part, frame_n))
+					Video_Bytes -= len(outbuf)
+					outbuf= ''
 					dropping= True
 			if Videostarted and not dropping:
 				outbuf += data[4:]
