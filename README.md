@@ -71,6 +71,10 @@ You will need to run as root to be able create the appropriate network sockets, 
 
 ```
 
+  The final output of a 720p capture of Big Buck Bunny ((c) copyright 2008, Blender Foundation / www.bigbuckbunny.org) can be viewed here: 
+
+  [[!Big Buck Bunny](http://rfidiot.org/hdmi-mjpeg/bbb-1024.png)](http://rfidiot.org/hdmi-mjpeg/bb-rip-720-trimmed-final.mkv)
+
 ##Tips & tricks:
 
   Reduce packet loss by using a direct connection instead of a switch (don't forget to set a dummy default route or you won't be able to join the multicast group).
@@ -97,11 +101,11 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   Framerates by Jared Earl. :)
 
-##Notes
+##Notes:
 
   Video frames are buffered and discarded if any part of the frame is lost or received out of sequence. This is safe to do as the data is in MJPEG format so every frame is a complete image, and loss of one frame every now and then will not be noticeable. The same cannot be said for audio, and currently no attempt is made to sanitise the audio.
 
   The audio track is currently not tagged with its data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack goes out of sync during playback then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates).
 
-  HDCP is stripped by the hardware.
+  HDCP is stripped by the hardware. Why this is not a surprise: http://adamsblog.aperturelabs.com/2013/02/hdcp-is-dead-long-live-hdcp-peek-into.html
 

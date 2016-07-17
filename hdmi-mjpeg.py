@@ -25,6 +25,7 @@ import time, datetime
 from optparse import OptionParser
 
 MESSAGE = "5446367A600200000000000303010026000000000234C2".decode('hex')
+exitvalue= os.EX_OK
 
 
 usage= "usage: %prog [options] <file prefix> [minutes]"
@@ -33,6 +34,7 @@ parser.add_option("-l", "--local_ip", dest="local_ip", default= "0.0.0.0", help=
 parser.add_option("-p", "--sender_port", type="int", dest="sender_port", default= 48689, help="set sender's UDP PORT (48689)")
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default= True, help="don't print status messages to stdout (False)")
 parser.add_option("-s", "--sender_ip", dest="sender_ip", default= "192.168.168.55", help="set sender's IP address (192.168.168.55)")
+parser.add_option("-S", "--strict", action="store_true", dest="strict", default= False, help="strict mode - abort recording if frames dropped")
 (options, args) = parser.parse_args()
 
 if not (len(args) == 1 or len(args) == 2):
@@ -53,8 +55,8 @@ def signal_handler(signal, frame):
 	Video.flush()
 	os.fsync(Video.fileno())
 	Video.close()
-	log('Video: %d bytes' % Video_Bytes)
-	sys.exit(0)
+	log('Video: %d bytes (%d frames dropped)' % (Video_Bytes, Video_Dropped))
+	sys.exit(exitvalue)
 
 def keepalive():
 	Keepalive_sock.sendto(MESSAGE, (options.sender_ip, options.sender_port))
@@ -73,6 +75,8 @@ try:
 except:
 	record_time= None
 end_time= None
+if options.strict:
+	log('Recording will be aborted if any frame is dropped')
 
 
 Keepalive_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP socket for keepalives
@@ -99,6 +103,7 @@ log('Audio: %s-audio.dat' % args[0])
 Video= open(args[0] + "-video.dat","w")
 log('Video: %s-video.dat' % args[0])
 Video_Bytes= 0
+Video_Dropped= 0
 Audio_Bytes= 0
 
 # keep track of dropped frames
@@ -190,7 +195,14 @@ while True:
 						log('Recording will stop automatically at: %s' % datetime.datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S'))
 				frame_prev= frame_n
 				Video.write(outbuf)
+				Video_Bytes += len(outbuf)
 				outbuf= ''
+				if dropping:
+					Video_Dropped += 1
+					if options.strict:
+						log('Aborting due to frame drop!')
+						exitvalue= os.EX_DATAERR
+						os.kill(os.getpid(), signal.SIGINT)
 				dropping= False
 				if end_time and time.time() >= end_time:
 					log("Time's up!")
@@ -199,17 +211,14 @@ while True:
 				if not frame_prev == frame_n:
 					log('dropped frame % d' % frame_n)
 					frame_prev= frame_n
-					Video_Bytes -= len(outbuf)
 					outbuf= ''
 					dropping= True
 				if not part_prev + 1 == part:
 					log('dropped part %d of frame %d' % (part, frame_n))
-					Video_Bytes -= len(outbuf)
 					outbuf= ''
 					dropping= True
 			if Videostarted and not dropping:
 				outbuf += data[4:]
-				Video_Bytes += len(data[4:])
 			part_prev= part
     		keepalive()
 
