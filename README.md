@@ -73,7 +73,7 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   The final output of a 720p capture of Big Buck Bunny ((c) copyright 2008, Blender Foundation / www.bigbuckbunny.org) can be viewed here: 
 
-  [[!Big Buck Bunny](http://rfidiot.org/hdmi-mjpeg/bbb-1024.png)](http://rfidiot.org/hdmi-mjpeg/bb-rip-720-trimmed-final.mkv)
+  <a href="http://rfidiot.org/hdmi-mjpeg/bb-rip-720-trimmed-final.mkv" target="_blank"><img src="http://rfidiot.org/hdmi-mjpeg/bbb-1024.png" alt="Big Buck Bunny" width="1024" height="768" border="10"></a>
 
 ##Tips & tricks:
 
